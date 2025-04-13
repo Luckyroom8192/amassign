@@ -1,0 +1,15 @@
+MAJOR REFERENCES
+
+path equation ref : https://mathshistory.st-andrews.ac.uk/Curves/Eight/
+
+stl library ref : https://www.cppreference.com/Cpp_STL_ReferenceManual.pdf
+
+sampling based mpc ref : https://www.researchgate.net/publication/242078377_Sampling_Based_Model_Predictive_Control_with_Application_to_Autonomous_Vehicle_Guidance
+                       : https://www.sciencedirect.com/topics/engineering/receding-horizon-control
+
+AGV's ROS based frenet planner ref : https://github.com/anime-sh/Frenet_Planner_AGV
+
+frenet transform ref : https://in.mathworks.com/help/nav/ref/trajectoryoptimalfrenet.frenet2cart.html
+
+python implementation : https://github.com/fjp/frenet
+

@@ -22,13 +22,14 @@ traj_x, traj_y = zip(*trajectory)
 # Plot
 plt.figure(figsize=(10, 10))
 plt.plot(wp_x, wp_y, 'b-', label='Path')  # Blue line for waypoints
-plt.plot(traj_x, traj_y, 'r-', label='Vehicle Trajectory')  # Red line for vehicle
+plt.plot(traj_x, traj_y, 'r-', label='Vehicle path')  # Red line for vehicle
 for i, pos in enumerate(obstacle_positions):
     plt.plot(pos[0], pos[1], 'ko', label=f'Obstacle {i+1}' if i == 0 else "")  # Black dots for obstacles with numbering
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
-plt.title('Vehicle Trajectory with Receding Horizon Control')
+plt.title('Vehicle movement')
 plt.legend()
 plt.axis('equal')  # Equal aspect ratio
 plt.grid(True)
+plt.savefig('robot_movement.png')
 plt.show()

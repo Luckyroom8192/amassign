@@ -1,4 +1,14 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <fstream>
+#include <limits>
+
+const double PATH_ERR_WEIGHT = 1500.0;
+const double CONTROL_EFFORT_WEIGHT = 0.00015;
+const double dt = 0.1;
+const double total_time = 230.0;
+const double v = 0.03;
 
 struct Point {
     double x, y;
@@ -10,7 +20,7 @@ public:
     double x, y, theta;
     Model(double x0, double y0, double theta0) : x(x0), y(y0), theta(theta0) {}
 
-    void update(double v, double omega, double dt) {
+    void update(double omega) {
         x += v * cos(theta) * dt;
         y += v * sin(theta) * dt;
         theta += omega * dt;
@@ -114,7 +124,7 @@ public:
     Obstacle(double initial_s, double velocity, Path* p)
         : s_obs(initial_s), v_obs(velocity), path(p) {}
 
-    void update(double dt) {
+    void update() {
         // tried writing a function to update the dynamic position of the obstacle
         // need to debug this part
         // as of now we consider the obstacle to be static
@@ -126,26 +136,27 @@ public:
 };
 
 double CostFunc(const Model& model, const Path& path, std::vector<Obstacle>& obstacles,
-                  double s, double d, double omega, double dt, int horizon_steps) {
+                  double s, double d, double omega, int horizon_steps) {
     double total_cost = 0.0;
     Model temp_model(model.x, model.y, model.theta);
     size_t currentPos = 0;
+    double k = omega / v;
     auto [init_s, init_d] = path.CarttoFrenet({temp_model.x, temp_model.y}, currentPos);
 
     for (int i = 0; i < horizon_steps; ++i) {
         double theta_path = path.FindAngle(s);
-        double path_error = 500.0 * d * d; 
+        double path_error = PATH_ERR_WEIGHT * d * d; 
         double obs_penalty = 0.0;
         for (const auto& obs : obstacles) {
             Point obs_pos = obs.getPosition();
             double dist_to_obs = sqrt(pow(temp_model.x - obs_pos.x, 2) + pow(temp_model.y - obs_pos.y, 2));
             obs_penalty += (dist_to_obs < 0.25) ? 1.0 / (6 * dist_to_obs + 0.01) : 0.0;
         }
-        double control_effort = 0.15 * omega * omega;
+        double control_effort = CONTROL_EFFORT_WEIGHT * k * k;
 
         total_cost += path_error + obs_penalty + control_effort;
 
-        temp_model.update(0.05, omega, dt);
+        temp_model.update(omega);
         auto [new_s, new_d] = path.CarttoFrenet({temp_model.x, temp_model.y}, currentPos);
         s = new_s;
         d = new_d;
@@ -156,9 +167,6 @@ double CostFunc(const Model& model, const Path& path, std::vector<Obstacle>& obs
 int main() {
 
     // initializing model and generating path
-    const double dt = 0.1;
-    const double total_time = 230.0;
-    const double v = 0.03;
     Path path;
     double initial_theta = path.FindAngle(0.0);
     Model model(path.waypoints[0].x, path.waypoints[0].y, initial_theta);
@@ -196,14 +204,14 @@ int main() {
         double min_cost = std::numeric_limits<double>::max();
 
         for (double omega = -0.5; omega <= 0.5; omega += 0.05) {  // limit omega to a range
-            double cost = CostFunc(model, path, obstacles, s, d, omega, dt, horizon_steps);
+            double cost = CostFunc(model, path, obstacles, s, d, omega, horizon_steps);
             if (cost < min_cost) {
                 min_cost = cost;
                 best_omega = omega;
             }
         }
 
-        model.update(v, best_omega, dt);
+        model.update(best_omega);
 
         //writing the state of the robot to the output file
         outfile << "T," << t << "," << model.x << "," << model.y << "," << model.theta << ","
